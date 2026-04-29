@@ -1,0 +1,395 @@
+{
+  "name": "AI Support Ticket Triage and Auto-Response System",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "f2df144c-ff6a-4191-bca8-a139314e035b",
+      "name": "Check for New Tickets Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1152,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "supportSheetId",
+              "value": "=1BQ1FSDTQWvAROagxLMbxoANANcfWVYpnbFL2YQa2B7g",
+              "type": "string"
+            },
+            {
+              "id": "3078dbe7-1bdb-48a9-a441-aa2437fc94b7",
+              "name": "supportSheetTab",
+              "value": "support_form",
+              "type": "string"
+            },
+            {
+              "id": "ae23547b-7cac-4707-87ad-97ea94414fce",
+              "name": "trackerSheetId",
+              "value": "=1Vpdql7CaFkUETfYu0Riv_UhxM81L6GSCyYNKhQT2YVU",
+              "type": "string"
+            },
+            {
+              "id": "028ecd6c-23cd-45cc-9019-705f422c213e",
+              "name": "trackerSheetTab",
+              "value": "support_tracker",
+              "type": "string"
+            },
+            {
+              "id": "94456911-7ea4-4d0e-8465-517e40047e00",
+              "name": "supportFromEmail",
+              "value": "christianmangala@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "fcd39693-9bf5-4e26-9ac0-cb700177e341",
+              "name": "internalSupportEmail",
+              "value": "christianmangala@hotmail.com",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "lastProcessedRow",
+              "value": 1,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "d64f50c3-b9c5-47f2-a458-0db4b27ca1db",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -928,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $json.supportSheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.supportSheetTab }}",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "1c063729-aeed-4109-8e44-0c0a0e680e96",
+      "name": "Read New Support Tickets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -704,
+        112
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rxKqH2fYo9NudXdn",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is a new support ticket:\n\nCustomer name: {{ $json.Name }}\nCustomer email: {{ $json.Email }}\nProperty: {{ $json.Property }}\nBooking reference: {{ $json.BookingRef }}\n\nMessage:{{ $json.Message }}\n\nClassify it and generate the JSON response as instructed.\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a customer support triage assistant for a hospitality/property business.\n\nFor each support ticket, you MUST return ONLY valid json.  \nIMPORTANT: Your entire output must be pure json, with no markdown, no text, no explanations.\n\nClassify the support ticket using the following fields:\n\n- \"category\": one of [\"payments\", \"booking\", \"cleaning\", \"maintenance\", \"id_verification\", \"check_in_issue\", \"cancellation\", \"technical_issue\", \"other\"]\n- \"priority\": one of [\"Low\", \"Medium\", \"High\"]\n- \"sentiment\": one of [\"Positive\", \"Neutral\", \"Negative\"]\n\nAlso generate:\n- \"reply_to_customer\": a short professional customer reply\n- \"internal_summary\": a brief summary for internal staff\n\nReturn your answer ONLY as JSON with this exact structure (IMPORTANT: json must be valid):\n\n{\n  \"category\": \"\",\n  \"priority\": \"\",\n  \"sentiment\": \"\",\n  \"reply_to_customer\": \"\",\n  \"internal_summary\": \"\"\n}\n\nReturn ONLY the JSON object. Do not include any other text before or after the JSON.\n\n"
+        }
+      },
+      "id": "98e87602-95c0-4d13-bf85-a1e02cdb86f3",
+      "name": "AI Triage Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -480,
+        112
+      ],
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "triageData",
+              "value": "={{ $json.output }}",
+              "type": "object"
+            },
+            {
+              "id": "id-2",
+              "name": "category",
+              "value": "={{ $json.output.category }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "priority",
+              "value": "={{ $json.output.priority }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "sentiment",
+              "value": "={{ $json.output.sentiment }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "customerResponse",
+              "value": "={{ $json.output.reply_to_customer }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "internalSummary",
+              "value": "={{ $json.output.internal_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "id-7",
+              "name": "processedAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "25a86de2-b092-4a45-aae1-72c9c4f21165",
+      "name": "Format Triage Results",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -128,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Read New Support Tickets').item.json.Email }}",
+        "subject": "=Re: Your Support Request - {{ $json.category }}",
+        "message": "={{ $json.customerResponse }}",
+        "options": {}
+      },
+      "id": "eb7ad73a-5f84-445b-8b0a-5adfc66c2eec",
+      "name": "Send Email to Customer",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        96,
+        16
+      ],
+      "webhookId": "a2953930-6b51-4468-92b6-b915e2c41c2d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Tgju3PhVXHxNNhkh",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Workflow Configuration').first().json.trackerSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Support Tracker"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "Timestamp": "={{ $json.Timestamp }}",
+            "Customer Name": "={{ $json['Customer Name'] }}",
+            "Email Address": "={{ $json['Email Address'] }}",
+            "Issue Description": "={{ $json['Issue Description'] }}",
+            "category": "={{ $json.category }}",
+            "priority": "={{ $json.priority }}",
+            "sentiment": "={{ $json.sentiment }}",
+            "internalSummary": "={{ $json.internalSummary }}",
+            "processedAt": "={{ $json.processedAt }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "f08b94ed-716f-4d26-8250-9ffadaa66ff7",
+      "name": "Log to Support Tracker",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        96,
+        208
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rxKqH2fYo9NudXdn",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        320
+      ],
+      "id": "d97a09fa-b265-484e-af75-585881be4fbc",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "p9vbDRhtGKlF4wfX",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"category\": { \"type\": \"string\" },\n    \"priority\": { \"type\": \"string\" },\n    \"sentiment\": { \"type\": \"string\" },\n    \"reply_to_customer\": { \"type\": \"string\" },\n    \"internal_summary\": { \"type\": \"string\" }\n  },\n  \"required\": [\n    \"category\",\n    \"priority\",\n    \"sentiment\",\n    \"reply_to_customer\",\n    \"internal_summary\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -320,
+        320
+      ],
+      "id": "82d7761c-54b4-4dcf-a35a-229dcf930e23",
+      "name": "Structured Output Parser"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Check for New Tickets Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Read New Support Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read New Support Tickets": {
+      "main": [
+        [
+          {
+            "node": "AI Triage Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Triage Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Triage Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Triage Results": {
+      "main": [
+        [
+          {
+            "node": "Send Email to Customer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log to Support Tracker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Triage Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Triage Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1,
+    "availableInMCP": false
+  },
+  "versionId": "8ddeb229-eaad-4c8d-a052-b66654967e27",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9c1dbe7ef9f317fe45f49e1a8c4fb1c2583c604b47556ac413909edca6b1005e"
+  },
+  "id": "CcWObxrmC7besTcV",
+  "tags": []
+}

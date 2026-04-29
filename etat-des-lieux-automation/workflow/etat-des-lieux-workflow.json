@@ -1,0 +1,1425 @@
+{
+  "name": "État des Lieux PDF Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1Oo604olkOBoB3hBkGqHSbwHiO9EpdB0eNRrs5vwAq-M",
+          "mode": "list",
+          "cachedResultName": "ÉTAT DES LIEUX DE L’APPARTEMENT (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Oo604olkOBoB3hBkGqHSbwHiO9EpdB0eNRrs5vwAq-M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 964087331,
+          "mode": "list",
+          "cachedResultName": "Form responses 2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Oo604olkOBoB3hBkGqHSbwHiO9EpdB0eNRrs5vwAq-M/edit#gid=964087331"
+        },
+        "event": "rowAdded",
+        "options": {
+          "dateTimeRenderOption": "SERIAL_NUMBER"
+        }
+      },
+      "id": "0d9107da-8e62-4108-bf1b-990d9f8b3dac",
+      "name": "New Form Response",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        304
+      ],
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "abKnOMf7wIPC3hDW",
+          "name": "Google Sheets Trigger OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Run Once for Each Item').item.json[\"Adresse email du locataire\"] }}",
+        "subject": "Votre rapport d'état des lieux est prêt",
+        "emailType": "text",
+        "message": "Bonjour,\n\nVotre rapport d'état des lieux a été généré avec succès.\n\nVeuillez trouver le document PDF en pièce jointe.\n\nCordialement,\nÉquipe Inspection",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "id": "84b57227-4407-4482-a74d-ffc178bf37a6",
+      "name": "Send Email with PDF",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1296,
+        304
+      ],
+      "webhookId": "dc9b4416-e460-434a-8a08-dac6a30e86d4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "rAX1U0wjIZdDomlR",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdf.co/v1/pdf/convert/from/html",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=x-api-key",
+              "value": "=christianmangala@gmail.com_yzMssO4EqC2aFJR6h9B8du51jODRPxAoAkFcNPsB0Adf7Lx8GDx3rAigQhz4w3LN"
+            },
+            {
+              "name": "=Content-Type",
+              "value": "=application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "html",
+              "value": "={{ $json.report_html_pdf }}"
+            },
+            {
+              "name": "name",
+              "value": "etat-des-lieux.pdf"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        624,
+        304
+      ],
+      "id": "1e6ac16a-b172-4f05-b9cb-619b983d94b0",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        848,
+        304
+      ],
+      "id": "b81e966d-02b7-43fb-9777-34a6a36b9395",
+      "name": "Download Generated PDF"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    ...$json,\n    ID: $json.ID || Date.now()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        304
+      ],
+      "id": "56d3eb41-48ff-4a6d-8d98-acfc63bc5698",
+      "name": "Run Once for Each Item"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const item = $json;\n\nfunction safe(value) {\n  return value === undefined || value === null || value === \"\" ? \"-\" : String(value).trim();\n}\n\nfunction normalizeKey(key) {\n  return String(key)\n    .toLowerCase()\n    .normalize(\"NFD\")\n    .replace(/[\\u0300-\\u036f]/g, \"\")\n    .replace(/[’']/g, \"\")\n    .replace(/\\s+/g, \" \")\n    .trim();\n}\n\nfunction getValue(possibleNames) {\n  for (const name of possibleNames) {\n    const foundKey = Object.keys(item).find(\n      key => normalizeKey(key) === normalizeKey(name)\n    );\n    if (foundKey && safe(item[foundKey]) !== \"-\") {\n      return item[foundKey];\n    }\n  }\n  return \"-\";\n}\n\nfunction formatDate(value) {\n  if (!value || value === \"-\") return \"-\";\n\n  const raw = String(value).trim();\n\n  if (/^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$/.test(raw)) {\n    return raw;\n  }\n\n  if (/^\\d+(\\.\\d+)?$/.test(raw)) {\n    const serial = Number(raw);\n    const date = new Date((serial - 25569) * 86400 * 1000);\n    const day = String(date.getUTCDate()).padStart(2, \"0\");\n    const month = String(date.getUTCMonth() + 1).padStart(2, \"0\");\n    const year = date.getUTCFullYear();\n    return `${day}/${month}/${year}`;\n  }\n\n  const parsed = new Date(raw);\n  if (!isNaN(parsed)) {\n    const day = String(parsed.getDate()).padStart(2, \"0\");\n    const month = String(parsed.getMonth() + 1).padStart(2, \"0\");\n    const year = parsed.getFullYear();\n    return `${day}/${month}/${year}`;\n  }\n\n  return raw;\n}\n\nfunction badge(value) {\n  const v = safe(value);\n  const n = normalizeKey(v);\n\n  let cls = \"badge neutral\";\n  if (n === \"tres bien\") cls = \"badge excellent\";\n  if (n === \"bon\") cls = \"badge good\";\n  if (n === \"moyen\") cls = \"badge average\";\n  if (n === \"mauvais\") cls = \"badge bad\";\n  if (n === \"non applicable\" || n === \"n/a\") cls = \"badge na\";\n\n  if ([\"tres bien\", \"bon\", \"moyen\", \"mauvais\", \"non applicable\", \"n/a\"].includes(n)) {\n    return `<span class=\"${cls}\">${v}</span>`;\n  }\n\n  return `<span class=\"text-value\">${v}</span>`;\n}\n\nconst locataire = safe(getValue([\"Nom du locataire\", \"Locataire\"]));\nconst bailleur = safe(getValue([\"Nom du bailleur\", \"Bailleur\"]));\nconst emailLocataire = safe(getValue([\"Adresse email du locataire\", \"email_locataire\", \"Email locataire\"]));\nconst adresseAppartement = safe(getValue([\"Adresse de l’appartement\", \"Adresse de l'appartement\", \"Adresse\"]));\nconst dateEtatRaw = getValue([\"Date de l’état des lieux\", \"Date de l'etat des lieux\", \"Date\"]);\nconst dateEtat = formatDate(dateEtatRaw);\nconst typeEtat = safe(getValue([\"Type\"]));\n\nconst excludedKeys = [\n  \"Timestamp\",\n  \"Nom du locataire\",\n  \"Locataire\",\n  \"Nom du bailleur\",\n  \"Bailleur\",\n  \"Adresse email du locataire\",\n  \"email_locataire\",\n  \"Email locataire\",\n  \"Adresse de l’appartement\",\n  \"Adresse de l'appartement\",\n  \"Adresse\",\n  \"Date de l’état des lieux\",\n  \"Date de l'etat des lieux\",\n  \"Date\",\n  \"Type\",\n  \"Total\",\n  \"Bon\",\n  \"Moyen\",\n  \"Mauvais\",\n  \"N/A\"\n].map(normalizeKey);\n\nconst detailEntries = Object.entries(item).filter(([key, value]) => {\n  const nk = normalizeKey(key);\n  return !excludedKeys.includes(nk) && safe(value) !== \"-\";\n});\n\nconst total = detailEntries.length;\nconst bon = detailEntries.filter(([_, v]) => normalizeKey(v) === \"bon\" || normalizeKey(v) === \"tres bien\").length;\nconst moyen = detailEntries.filter(([_, v]) => normalizeKey(v) === \"moyen\").length;\nconst mauvais = detailEntries.filter(([_, v]) => normalizeKey(v) === \"mauvais\").length;\nconst na = detailEntries.filter(([_, v]) => normalizeKey(v) === \"non applicable\" || normalizeKey(v) === \"n/a\").length;\n\nconst detailRows = detailEntries.map(([key, value]) => `\n  <tr>\n    <td class=\"element\">${safe(key)}</td>\n    <td class=\"etat\">${badge(value)}</td>\n  </tr>\n`).join(\"\");\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<style>\n  * {\n    box-sizing: border-box;\n  }\n\n  body {\n    margin: 0;\n    padding: 0;\n    font-family: Arial, Helvetica, sans-serif;\n    background: #eef3f8;\n    color: #1f2933;\n  }\n\n  .page {\n    width: 100%;\n    max-width: 960px;\n    margin: 0 auto;\n    padding: 28px;\n    background: #ffffff;\n  }\n\n  .hero {\n    background: linear-gradient(135deg, #0f4c81, #1f78b4);\n    color: #ffffff;\n    padding: 32px 28px;\n    border-radius: 18px;\n    margin-bottom: 24px;\n  }\n\n  .hero h1 {\n    margin: 0;\n    font-size: 30px;\n    letter-spacing: 0.3px;\n  }\n\n  .hero p {\n    margin: 8px 0 0;\n    font-size: 14px;\n    opacity: 0.9;\n  }\n\n  .info-grid {\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 14px;\n    margin-bottom: 22px;\n  }\n\n  .info-card {\n    border: 1px solid #dce3ea;\n    background: #f9fbfd;\n    border-radius: 14px;\n    padding: 15px 16px;\n  }\n\n  .info-card .label {\n    font-size: 11px;\n    text-transform: uppercase;\n    letter-spacing: 0.5px;\n    color: #6b7280;\n    margin-bottom: 7px;\n  }\n\n  .info-card .value {\n    font-size: 15px;\n    font-weight: 700;\n    color: #111827;\n    line-height: 1.35;\n  }\n\n  .summary {\n    display: grid;\n    grid-template-columns: repeat(5, 1fr);\n    gap: 10px;\n    margin: 18px 0 26px;\n  }\n\n  .summary-box {\n    border-radius: 12px;\n    padding: 13px 10px;\n    text-align: center;\n    background: #f3f6f9;\n    border: 1px solid #dce3ea;\n  }\n\n  .summary-box strong {\n    display: block;\n    font-size: 21px;\n    color: #0f4c81;\n    margin-bottom: 3px;\n  }\n\n  .summary-box span {\n    font-size: 12px;\n    color: #4b5563;\n    text-transform: uppercase;\n  }\n\n  .section-title {\n    margin: 0 0 12px;\n    padding-left: 12px;\n    border-left: 5px solid #0f4c81;\n    font-size: 21px;\n    color: #111827;\n  }\n\n  table {\n    width: 100%;\n    border-collapse: separate;\n    border-spacing: 0;\n    font-size: 13px;\n    overflow: hidden;\n    border: 1px solid #dce3ea;\n    border-radius: 14px;\n  }\n\n  thead th {\n    background: #0f4c81;\n    color: #ffffff;\n    padding: 12px;\n    text-align: left;\n    font-size: 13px;\n  }\n\n  tbody td {\n    padding: 10px 12px;\n    border-bottom: 1px solid #e5e7eb;\n    vertical-align: top;\n  }\n\n  tbody tr:nth-child(even) {\n    background: #f9fbfd;\n  }\n\n  tbody tr:last-child td {\n    border-bottom: none;\n  }\n\n  .element {\n    width: 38%;\n    font-weight: 600;\n    color: #374151;\n  }\n\n  .etat {\n    width: 62%;\n  }\n\n  .badge {\n    display: inline-block;\n    padding: 5px 9px;\n    border-radius: 999px;\n    font-size: 11px;\n    font-weight: 700;\n  }\n\n  .excellent {\n    background: #dcfce7;\n    color: #166534;\n  }\n\n  .good {\n    background: #dbeafe;\n    color: #1e40af;\n  }\n\n  .average {\n    background: #fef3c7;\n    color: #92400e;\n  }\n\n  .bad {\n    background: #fee2e2;\n    color: #991b1b;\n  }\n\n  .na {\n    background: #e5e7eb;\n    color: #374151;\n  }\n\n  .neutral {\n    background: #f3f4f6;\n    color: #111827;\n  }\n\n  .text-value {\n    line-height: 1.45;\n    color: #111827;\n  }\n\n  .signature-section {\n    margin-top: 34px;\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n    gap: 18px;\n  }\n\n  .signature-box {\n    border: 1px solid #dce3ea;\n    border-radius: 14px;\n    padding: 16px;\n    height: 95px;\n  }\n\n  .signature-box small {\n    color: #6b7280;\n    font-size: 12px;\n  }\n\n  .signature-line {\n    margin-top: 42px;\n    border-top: 1px solid #9ca3af;\n  }\n\n  .footer {\n    margin-top: 28px;\n    padding-top: 14px;\n    border-top: 1px solid #e5e7eb;\n    text-align: center;\n    font-size: 11px;\n    color: #6b7280;\n  }\n</style>\n</head>\n\n<body>\n  <div class=\"page\">\n\n    <div class=\"hero\">\n      <h1>État des lieux de l'appartement</h1>\n      <p>Rapport généré automatiquement après soumission du formulaire</p>\n    </div>\n\n    <div class=\"info-grid\">\n      <div class=\"info-card\">\n        <div class=\"label\">Locataire</div>\n        <div class=\"value\">${locataire}</div>\n      </div>\n\n      <div class=\"info-card\">\n        <div class=\"label\">Bailleur</div>\n        <div class=\"value\">${bailleur}</div>\n      </div>\n\n      <div class=\"info-card\">\n        <div class=\"label\">Email locataire</div>\n        <div class=\"value\">📧 ${emailLocataire}</div>\n      </div>\n\n      <div class=\"info-card\">\n        <div class=\"label\">Adresse de l'appartement</div>\n        <div class=\"value\">${adresseAppartement}</div>\n      </div>\n\n      <div class=\"info-card\">\n        <div class=\"label\">Date de l'état des lieux</div>\n        <div class=\"value\">${dateEtat}</div>\n      </div>\n\n      <div class=\"info-card\">\n        <div class=\"label\">Type</div>\n        <div class=\"value\">${typeEtat}</div>\n      </div>\n    </div>\n\n    <div class=\"summary\">\n      <div class=\"summary-box\"><strong>${total}</strong><span>Total</span></div>\n      <div class=\"summary-box\"><strong>${bon}</strong><span>Bon</span></div>\n      <div class=\"summary-box\"><strong>${moyen}</strong><span>Moyen</span></div>\n      <div class=\"summary-box\"><strong>${mauvais}</strong><span>Mauvais</span></div>\n      <div class=\"summary-box\"><strong>${na}</strong><span>N/A</span></div>\n    </div>\n\n    <h2 class=\"section-title\">Détails de l'état des lieux</h2>\n\n    <table>\n      <thead>\n        <tr>\n          <th>Élément contrôlé</th>\n          <th>État / Observation</th>\n        </tr>\n      </thead>\n      <tbody>\n        ${detailRows}\n      </tbody>\n    </table>\n\n    <div class=\"signature-section\">\n      <div class=\"signature-box\">\n        <small>Signature du locataire</small>\n        <div class=\"signature-line\"></div>\n      </div>\n\n      <div class=\"signature-box\">\n        <small>Signature du bailleur</small>\n        <div class=\"signature-line\"></div>\n      </div>\n    </div>\n\n    <div class=\"footer\">\n      Document généré automatiquement — État des lieux locatif\n    </div>\n\n  </div>\n</body>\n</html>\n`;\n\nreturn {\n  json: {\n    ...item,\n    locataire,\n    bailleur,\n    emailLocataire,\n    adresseAppartement,\n    dateEtat,\n    typeEtat,\n    total,\n    bon,\n    moyen,\n    mauvais,\n    na,\n    report_html_pdf: html\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        304
+      ],
+      "id": "6405e4a8-3e72-40cc-ab78-8bb83e73420d",
+      "name": "Generate HTML Template"
+    },
+    {
+      "parameters": {
+        "keep": "lastItems"
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        304
+      ],
+      "id": "00c9b9e3-4ef4-473d-9b97-3ceeda57d4d4",
+      "name": "Item Lists"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Oo604olkOBoB3hBkGqHSbwHiO9EpdB0eNRrs5vwAq-M",
+          "mode": "list",
+          "cachedResultName": "ÉTAT DES LIEUX DE L’APPARTEMENT (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Oo604olkOBoB3hBkGqHSbwHiO9EpdB0eNRrs5vwAq-M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 964087331,
+          "mode": "list",
+          "cachedResultName": "Form responses 2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Oo604olkOBoB3hBkGqHSbwHiO9EpdB0eNRrs5vwAq-M/edit#gid=964087331"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $('Run Once for Each Item').item.json.Timestamp }}",
+            "PDF envoyé": "Oui",
+            "Date d’envoi": "={{ new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Kinshasa' }) }}",
+            "ID": "={{ $('Run Once for Each Item').item.json.ID }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nom du locataire ",
+              "displayName": "Nom du locataire ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Adresse email du locataire",
+              "displayName": "Adresse email du locataire",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nom du bailleur   ",
+              "displayName": "Nom du bailleur   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Adresse de l’appartement  ",
+              "displayName": "Adresse de l’appartement  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date de l’état des lieux  ",
+              "displayName": "Date de l’état des lieux  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Type ",
+              "displayName": "Type ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salon /  Aluminium   ",
+              "displayName": "Salon /  Aluminium   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salon /  Portes intérieures  ",
+              "displayName": "Salon /  Portes intérieures  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salon /   Portes extérieures   ",
+              "displayName": "Salon /   Portes extérieures   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salon /   Moustiquaires ",
+              "displayName": "Salon /   Moustiquaires ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salon /    Serrures ",
+              "displayName": "Salon /    Serrures ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salon /    Prises murales ",
+              "displayName": "Salon /    Prises murales ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salon /    Points lumineux",
+              "displayName": "Salon /    Points lumineux",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salon /    Interrupteurs ",
+              "displayName": "Salon /    Interrupteurs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salon /   Climatiseur   ",
+              "displayName": "Salon /   Climatiseur   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salon /   Carrelage ",
+              "displayName": "Salon /   Carrelage ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salon /   Peinture murs ",
+              "displayName": "Salon /   Peinture murs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salon /   Plafond ",
+              "displayName": "Salon /   Plafond ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salon / Observation ",
+              "displayName": "Salon / Observation ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Parent  /  Aluminium   ",
+              "displayName": "Chambre Parent  /  Aluminium   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Parent   /  Portes intérieures  ",
+              "displayName": "Chambre Parent   /  Portes intérieures  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Parent   /   Portes extérieures   ",
+              "displayName": "Chambre Parent   /   Portes extérieures   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Parent   /   Moustiquaires ",
+              "displayName": "Chambre Parent   /   Moustiquaires ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Parent   /    Serrures ",
+              "displayName": "Chambre Parent   /    Serrures ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Parent    /    Prises murales ",
+              "displayName": "Chambre Parent    /    Prises murales ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Parent  /    Interrupteurs ",
+              "displayName": "Chambre Parent  /    Interrupteurs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Parent  /   Climatiseur   ",
+              "displayName": "Chambre Parent  /   Climatiseur   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Parent   /   Carrelage ",
+              "displayName": "Chambre Parent   /   Carrelage ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Parent    /   Peinture murs ",
+              "displayName": "Chambre Parent    /   Peinture murs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Parent   /   Plafond ",
+              "displayName": "Chambre Parent   /   Plafond ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Parent   /   Point lumineux",
+              "displayName": "Chambre Parent   /   Point lumineux",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Parent    / Observation ",
+              "displayName": "Chambre Parent    / Observation ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 01   /  Aluminium   ",
+              "displayName": "Chambre Enfant 01   /  Aluminium   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 01     /  Portes intérieures  ",
+              "displayName": "Chambre Enfant 01     /  Portes intérieures  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 01  /   Portes extérieures   ",
+              "displayName": "Chambre Enfant 01  /   Portes extérieures   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 01  /   Moustiquaires ",
+              "displayName": "Chambre Enfant 01  /   Moustiquaires ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 01     /    Serrures ",
+              "displayName": "Chambre Enfant 01     /    Serrures ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 01     /    Prises murales ",
+              "displayName": "Chambre Enfant 01     /    Prises murales ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 01  /    Interrupteurs ",
+              "displayName": "Chambre Enfant 01  /    Interrupteurs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 01  /   Climatiseur   ",
+              "displayName": "Chambre Enfant 01  /   Climatiseur   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 01    /   Carrelage ",
+              "displayName": "Chambre Enfant 01    /   Carrelage ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 01    /   Peinture murs ",
+              "displayName": "Chambre Enfant 01    /   Peinture murs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 01   /   Plafond ",
+              "displayName": "Chambre Enfant 01   /   Plafond ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 01     /   Point lumineux",
+              "displayName": "Chambre Enfant 01     /   Point lumineux",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 01   / Observation ",
+              "displayName": "Chambre Enfant 01   / Observation ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 02   /  Aluminium   ",
+              "displayName": "Chambre Enfant 02   /  Aluminium   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 02     /  Portes intérieures  ",
+              "displayName": "Chambre Enfant 02     /  Portes intérieures  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 02     /   Portes extérieures   ",
+              "displayName": "Chambre Enfant 02     /   Portes extérieures   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 02   /   Moustiquaires ",
+              "displayName": "Chambre Enfant 02   /   Moustiquaires ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 02     /    Serrures ",
+              "displayName": "Chambre Enfant 02     /    Serrures ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 02    /    Prises murales ",
+              "displayName": "Chambre Enfant 02    /    Prises murales ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 02    /    Interrupteurs ",
+              "displayName": "Chambre Enfant 02    /    Interrupteurs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 02   /   Climatiseur   ",
+              "displayName": "Chambre Enfant 02   /   Climatiseur   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 02    /   Carrelage ",
+              "displayName": "Chambre Enfant 02    /   Carrelage ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 02    /   Peinture murs ",
+              "displayName": "Chambre Enfant 02    /   Peinture murs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 02    /   Plafond ",
+              "displayName": "Chambre Enfant 02    /   Plafond ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 02    /   Point lumineux",
+              "displayName": "Chambre Enfant 02    /   Point lumineux",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chambre Enfant 02    / Observation ",
+              "displayName": "Chambre Enfant 02    / Observation ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cuisine /  Aluminium   ",
+              "displayName": "Cuisine /  Aluminium   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cuisine /  Portes intérieures  ",
+              "displayName": "Cuisine /  Portes intérieures  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cuisine /   Portes extérieures   ",
+              "displayName": "Cuisine /   Portes extérieures   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cuisine /   Moustiquaires ",
+              "displayName": "Cuisine /   Moustiquaires ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cuisine /    Serrures ",
+              "displayName": "Cuisine /    Serrures ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cuisine /    Prises murales ",
+              "displayName": "Cuisine /    Prises murales ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cuisine /    Interrupteurs ",
+              "displayName": "Cuisine /    Interrupteurs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cuisine /    Points lumineux",
+              "displayName": "Cuisine /    Points lumineux",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cuisine /   Carrelage ",
+              "displayName": "Cuisine /   Carrelage ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cuisine /   Peinture murs ",
+              "displayName": "Cuisine /   Peinture murs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cuisine /   Plafond ",
+              "displayName": "Cuisine /   Plafond ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cuisine /  Evier cuisine",
+              "displayName": "Cuisine /  Evier cuisine",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cuisine / Observation ",
+              "displayName": "Cuisine / Observation ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain enfant      /  Lavabo ",
+              "displayName": "Salle de bain enfant      /  Lavabo ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain enfant   /  Cabine de douche",
+              "displayName": "Salle de bain enfant   /  Cabine de douche",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain enfant    /  Chaufe eau",
+              "displayName": "Salle de bain enfant    /  Chaufe eau",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain enfant    /  Miroire",
+              "displayName": "Salle de bain enfant    /  Miroire",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain enfant     /   Toillete ",
+              "displayName": "Salle de bain enfant     /   Toillete ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain enfant   /    Prises murales ",
+              "displayName": "Salle de bain enfant   /    Prises murales ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain enfant  /    Interrupteurs ",
+              "displayName": "Salle de bain enfant  /    Interrupteurs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain enfant  /    Points lumineux",
+              "displayName": "Salle de bain enfant  /    Points lumineux",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain enfant    /   Carrelage ",
+              "displayName": "Salle de bain enfant    /   Carrelage ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain enfant   /   Peinture murs ",
+              "displayName": "Salle de bain enfant   /   Peinture murs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain enfant    /   Plafond ",
+              "displayName": "Salle de bain enfant    /   Plafond ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain parent    / Observation ",
+              "displayName": "Salle de bain parent    / Observation ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Toilette visiteur         /  Lavabo ",
+              "displayName": "Toilette visiteur         /  Lavabo ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Toilette visiteur   /  Miroire",
+              "displayName": "Toilette visiteur   /  Miroire",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain enfant     /   Toilette ",
+              "displayName": "Salle de bain enfant     /   Toilette ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Toilette visiteur  /    Prises murales ",
+              "displayName": "Toilette visiteur  /    Prises murales ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Toilette visiteur   /    Interrupteurs ",
+              "displayName": "Toilette visiteur   /    Interrupteurs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Toilette visiteur   /    Points lumineux",
+              "displayName": "Toilette visiteur   /    Points lumineux",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Toilette visiteur   /   Carrelage ",
+              "displayName": "Toilette visiteur   /   Carrelage ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Toilette visiteur   /   Peinture murs ",
+              "displayName": "Toilette visiteur   /   Peinture murs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Toilette visiteur   /   Plafond ",
+              "displayName": "Toilette visiteur   /   Plafond ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Toilette visiteur    / Observation ",
+              "displayName": "Toilette visiteur    / Observation ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain parent    /  Lavabo ",
+              "displayName": "Salle de bain parent    /  Lavabo ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain parent   /  Cabine de douche",
+              "displayName": "Salle de bain parent   /  Cabine de douche",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain parent   /  Chaufe eau",
+              "displayName": "Salle de bain parent   /  Chaufe eau",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain parent   /  Miroire",
+              "displayName": "Salle de bain parent   /  Miroire",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain parent   /   Toillete ",
+              "displayName": "Salle de bain parent   /   Toillete ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain parent  /    Prises murales ",
+              "displayName": "Salle de bain parent  /    Prises murales ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain parent /    Interrupteurs ",
+              "displayName": "Salle de bain parent /    Interrupteurs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain parent   /    Points lumineux",
+              "displayName": "Salle de bain parent   /    Points lumineux",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain parent   /   Carrelage ",
+              "displayName": "Salle de bain parent   /   Carrelage ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain parent   /   Peinture murs ",
+              "displayName": "Salle de bain parent   /   Peinture murs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain parent   /   Plafond ",
+              "displayName": "Salle de bain parent   /   Plafond ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Salle de bain parent   / Observation ",
+              "displayName": "Salle de bain parent   / Observation ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Couloir et Terrasses   /  Aluminium   ",
+              "displayName": "Couloir et Terrasses   /  Aluminium   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Couloir et Terrasses   /  Portes intérieures  ",
+              "displayName": "Couloir et Terrasses   /  Portes intérieures  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Couloir et Terrasses   /   Portes extérieures   ",
+              "displayName": "Couloir et Terrasses   /   Portes extérieures   ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Couloir et Terrasses   /   Moustiquaires ",
+              "displayName": "Couloir et Terrasses   /   Moustiquaires ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Couloir et Terrasses   /    Serrures ",
+              "displayName": "Couloir et Terrasses   /    Serrures ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Couloir et Terrasses   /    Prises murales ",
+              "displayName": "Couloir et Terrasses   /    Prises murales ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Couloir et Terrasses   /    Interrupteurs ",
+              "displayName": "Couloir et Terrasses   /    Interrupteurs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Couloir et Terrasses   /    Points lumineux",
+              "displayName": "Couloir et Terrasses   /    Points lumineux",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Couloir et Terrasses   /   Carrelage ",
+              "displayName": "Couloir et Terrasses   /   Carrelage ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Couloir et Terrasses   /   Peinture murs ",
+              "displayName": "Couloir et Terrasses   /   Peinture murs ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Couloir et Terrasses   /   Plafond ",
+              "displayName": "Couloir et Terrasses   /   Plafond ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Couloir et Terrasses   / Observation ",
+              "displayName": "Couloir et Terrasses   / Observation ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PDF envoyé",
+              "displayName": "PDF envoyé",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date d’envoi",
+              "displayName": "Date d’envoi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1520,
+        304
+      ],
+      "id": "c046b4d6-7236-4acb-8030-2bc66a4317aa",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0HEmUFeFdaHX9QYz",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "New Form Response": {
+      "main": [
+        [
+          {
+            "node": "Run Once for Each Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Download Generated PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Generated PDF": {
+      "main": [
+        [
+          {
+            "node": "Item Lists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Once for Each Item": {
+      "main": [
+        [
+          {
+            "node": "Generate HTML Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate HTML Template": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email with PDF": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Item Lists": {
+      "main": [
+        [
+          {
+            "node": "Send Email with PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "284c28f9-d54b-472d-862a-7d45ca9f7acb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b8a226a3dc722acca4bf3ed7cbc8976fef593e8066a79b8d8090cf00e3c4a2c5"
+  },
+  "id": "44NpUW15kZrmcu3m",
+  "tags": []
+}
