@@ -1,108 +1,59 @@
-> ⚠️ **Project Focus**  
-> This repository is dedicated to the **État des Lieux Automation System** built with n8n.  
-> Core documentation originates from `/docs` and is surfaced here for clarity.
-
 # 🏠 État des Lieux Automation System
 
-An **AI-powered automation workflow built with n8n** to streamline property inspection reports, generate professional PDFs, and automate communication with tenants and landlords.
+⚠️ **Important Notice**
+
+This repository contains multiple automation projects.
+
+👉 The **État des Lieux Automation System** is located here:  
+📂 `etat-des-lieux-automation/`
+
+👉 The full documentation is available here:  
+📄 `etat-des-lieux-automation/docs/README.md`
 
 ---
 
-## 🎯 Problem
+## 🚀 Project Overview
 
-Manual "État des lieux" processes are:
-- Time-consuming
-- Error-prone
-- Hard to standardize
-- Not scalable for property managers
+This system automates the **property inspection process (État des lieux)**:
 
----
-
-## 💡 Solution
-
-This system automates the entire workflow:
-
-✔ Data collection (Google Forms / input)  
-✔ Processing with n8n automation  
-✔ PDF report generation  
-✔ Automatic email delivery  
-✔ Structured data storage  
+- 📋 Data collection via forms  
+- 📄 Automatic PDF generation  
+- 📧 Email delivery to tenant  
+- ⚙️ Fully automated workflow using n8n  
 
 ---
 
-## ⚙️ Features
+## 🧠 Features
 
-- 📄 Automated PDF generation (professional format)
-- 📬 Email delivery to tenant/landlord
-- 🧠 Smart workflow automation (n8n)
-- 📊 Structured data handling (Google Sheets)
-- ⏱️ Time-saving and scalable process
-
----
-
-## 🧱 Project Structure
-/docs → Documentation
-/templates → PDF templates
-/workflow → n8n workflow JSON
-
+- Automated report generation  
+- Clean PDF layout  
+- Email delivery system  
+- Scalable workflow automation  
 
 ---
 
-## 🚀 How It Works
-
-1. User submits inspection data  
-2. n8n processes the input  
-3. PDF report is generated  
-4. Report is automatically sent via email  
-
----
-
-## 📦 Tech Stack
-
-- n8n (workflow automation)
-- Google Forms / Sheets
-- PDF generation tools
-- Email automation
-
----
-
-## 💼 Use Cases
-
-- Property managers
-- Real estate agencies
-- Airbnb / rental operators
-- Facility management companies
-
----
-
-## 🔥 Value Proposition
-
-This system can:
-- Reduce manual work by **80%+**
-- Standardize inspection reports
-- Improve client experience
-- Enable scalable operations
-
----
-
-## 📌 Status
-
-✅ Version 1 — Functional  
-🚧 Version 2 — Dashboard + enhancements planned  
-
----
-
-## 📞 Contact
-
-For implementation or customization:
-👉 Available for automation projects and consulting
 ## 📸 Screenshots
 
 ### 🔹 Workflow Overview
-![Workflow](screenshots/workflow-overview.png)
+![Workflow](screenshots/full-workflow.png)
 
 ### 🔹 PDF Output Example
-![PDF](screenshots/pdf-output.png)
+![PDF](screenshots/pdf-example.png)
 
 ### 🔹 Email Delivery
 ![Email](screenshots/email-sent.png)
+
+---
+
+## 📂 Project Structure
+
+```bash
+etat-des-lieux-automation/
+│
+├── docs/           # Documentation
+├── templates/      # PDF templates
+├── workflow/       # n8n workflows
+📞 Contact
+
+For implementation or customization:
+👉 Available for automation projects and consulting
