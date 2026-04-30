@@ -96,3 +96,13 @@ This system can:
 
 For implementation or customization:
 👉 Available for automation projects and consulting
+## 📸 Screenshots
+
+### 🔹 Workflow Overview
+![Workflow](screenshots/workflow-overview.png)
+
+### 🔹 PDF Output Example
+![PDF](screenshots/pdf-output.png)
+
+### 🔹 Email Delivery
+![Email](screenshots/email-sent.png)
