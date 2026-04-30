@@ -1,14 +1,14 @@
-# 🏠 État des Lieux Automation System
+# 🤖 n8n Automation Systems Portfolio
 
 ⚠️ **Important Notice**
 
 This repository contains multiple automation projects.
 
 👉 The **État des Lieux Automation System** is located here:  
-📂 `etat-des-lieux-automation/`
+📂 [Open Project Folder](./etat-des-lieux-automation/)
 
 👉 The full documentation is available here:  
-📄 `etat-des-lieux-automation/docs/README.md`
+📄 [Open Documentation](./etat-des-lieux-automation/docs/README.md)
 
 ---
 
@@ -35,13 +35,13 @@ This system automates the **property inspection process (État des lieux)**:
 ## 📸 Screenshots
 
 ### 🔹 Workflow Overview
-![Workflow](./screenshots/full-workflow.png)
+![Workflow](./etat-des-lieux-automation/screenshots/full-workflow.png)
 
 ### 🔹 PDF Output Example
-![PDF](./screenshots/pdf-example.png)
+![PDF](./etat-des-lieux-automation/screenshots/pdf-example.png)
 
 ### 🔹 Email Delivery
-![Email](./screenshots/email-sent.png)
+![Email](./etat-des-lieux-automation/screenshots/email-sent.png)
 
 ---
 
