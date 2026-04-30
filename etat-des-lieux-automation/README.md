@@ -5,10 +5,10 @@
 This repository contains multiple automation projects.
 
 👉 The **État des Lieux Automation System** is located here:  
-📂 [Open Project Folder](./etat-des-lieux-automation/)
+📂 [Open Project Folder][Click here](./)
 
 👉 The full documentation is available here:  
-📄 [Open Documentation](./etat-des-lieux-automation/docs/README.md)
+📄 [Open Documentation](./docs/README.md)
 
 ---
 
@@ -35,13 +35,13 @@ This system automates the **property inspection process (État des lieux)**:
 ## 📸 Screenshots
 
 ### 🔹 Workflow Overview
-![Workflow](./etat-des-lieux-automation/screenshots/full-workflow.png)
+![Workflow](./screenshots/full-workflow.png)
 
 ### 🔹 PDF Output Example
-![PDF](./etat-des-lieux-automation/screenshots/pdf-example.png)
+![PDF](./screenshots/pdf-example.png)
 
 ### 🔹 Email Delivery
-![Email](./etat-des-lieux-automation/screenshots/email-sent.png)
+![Email](./screenshots/email-sent.png)
 
 ---
 
